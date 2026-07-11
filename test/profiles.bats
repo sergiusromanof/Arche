@@ -20,3 +20,9 @@ cli() { bash "$ARCHE_ROOT/install.sh" "$@"; }
   [[ "$output" == *"demo-skill"* ]]
   [[ "$output" != *"demo-tool"* ]]
 }
+
+@test "an empty or comment-only profile yields no specs and is not an error" {
+  run arche_profile_specs empty
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}

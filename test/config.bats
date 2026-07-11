@@ -27,3 +27,15 @@ cli() { bash "$ARCHE_ROOT/install.sh" "$@"; }
   [ "$status" -eq 0 ]
   [ -f "$(arche_config_file)" ]
 }
+
+@test "config set preserves values with sed-special characters" {
+  arche_config_set LANGUAGE 'a&b|c'
+  run arche_config_get LANGUAGE
+  [ "$output" = 'a&b|c' ]
+}
+
+@test "config get distinguishes present-but-empty from unset" {
+  arche_config_set LANGUAGE ""
+  run arche_config_get LANGUAGE fallback
+  [ "$output" = "" ]
+}

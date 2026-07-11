@@ -19,3 +19,10 @@ load helper
   run arche_resolved_file rules demo-rule
   [ "$output" = "$ARCHE_ASSETS_ROOT/rules/demo-rule.md" ]
 }
+
+@test "render substitutes mixed-case placeholders" {
+  arche_config_set user_name Sergei
+  echo "hi {{user_name}}" > "$HOME/in.md"
+  arche_render "$HOME/in.md" "$HOME/out.md"
+  grep -q "hi Sergei" "$HOME/out.md"
+}
