@@ -130,7 +130,7 @@ arche_place() {
   mkdir -p "$(dirname "$dest")"
   if [ -e "$dest" ] || [ -L "$dest" ]; then
     if arche_is_ours "$dest"; then
-      rm -f "$dest"            # refresh our own link/copy
+      rm -rf "$dest"           # refresh our own link/copy (dir for copied skills)
     else
       echo "arche: skip (exists, not managed): $dest" >&2
       return 2

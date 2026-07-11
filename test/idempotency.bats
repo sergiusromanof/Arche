@@ -28,6 +28,15 @@ cli() { bash "$ARCHE_ROOT/install.sh" "$@"; }
   [ "$(cat "$dest")" = "user content" ]
 }
 
+@test "re-installing a copied skill directory refreshes cleanly (no nesting, no noise)" {
+  cli --copy install claude skills
+  run cli --copy install claude skills
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+  [ -d "$HOME/.claude/skills/demo-skill" ]
+  [ ! -e "$HOME/.claude/skills/demo-skill/demo-skill" ]
+}
+
 @test "uninstall prunes the manifest entry" {
   cli install claude skills
   cli uninstall claude skills
