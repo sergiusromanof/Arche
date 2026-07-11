@@ -69,3 +69,59 @@ arche_asset_targets() {
   fi
   echo "$t"
 }
+
+arche_require_not_root() {
+  if [ "${EUID:-$(id -u)}" -eq 0 ]; then
+    echo "arche: refusing to run as root" >&2
+    exit 1
+  fi
+}
+
+arche_manifest_path() { echo "$ARCHE_CONFIG_DIR/manifest"; }
+
+# Record a change so uninstall can reverse it exactly.
+arche_manifest_add() {
+  local kind="$1" path="$2" meta="${3:-}"
+  mkdir -p "$ARCHE_CONFIG_DIR"
+  printf '%s\t%s\t%s\n' "$kind" "$path" "$meta" >> "$(arche_manifest_path)"
+}
+
+# Copy a file to a timestamped backup before it is edited; echo the backup path.
+arche_backup() {
+  local file="$1" bak
+  [ -e "$file" ] || return 0
+  bak="$file.arche.bak.$(date +%s)"
+  cp -p "$file" "$bak"
+  echo "$bak"
+}
+
+# True if path is a symlink Arche created (points inside the assets root).
+arche_is_ours() {
+  local path="$1" tgt
+  [ -L "$path" ] || return 1
+  tgt="$(readlink "$path")"
+  case "$tgt" in "$ARCHE_ASSETS_ROOT"/*) return 0 ;; *) return 1 ;; esac
+}
+
+# Place src at dest as a symlink (default) or copy. Returns 0 placed, 2 skipped.
+# Never clobbers a file Arche did not create.
+arche_place() {
+  local src="$1" dest="$2" mode="${3:-link}"
+  mkdir -p "$(dirname "$dest")"
+  if [ -e "$dest" ] || [ -L "$dest" ]; then
+    if arche_is_ours "$dest"; then
+      rm -f "$dest"            # refresh our own link/copy
+    else
+      echo "arche: skip (exists, not managed): $dest" >&2
+      return 2
+    fi
+  fi
+  if [ "$mode" = "copy" ]; then
+    cp -R "$src" "$dest"
+    arche_manifest_add copy "$dest" "$src"
+  else
+    ln -s "$src" "$dest"
+    arche_manifest_add link "$dest" "$src"
+  fi
+  return 0
+}
