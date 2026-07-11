@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+
+jobs:
+  lint-and-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shellcheck and bats
+        run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            brew install shellcheck bats-core
+          else
+            sudo apt-get update && sudo apt-get install -y shellcheck bats
+          fi
+
+      - name: Shellcheck
+        run: shellcheck -x -P SCRIPTDIR install.sh lib/*.sh lib/adapters/*.sh
+
+      - name: Bats
+        run: bats test/
+
+      - name: Catalog is up to date
+        run: |
+          bash install.sh docs
+          git diff --exit-code docs/CATALOG.md
