@@ -147,8 +147,13 @@ cmd_reconfigure() { cmd_setup; }
 
 # Symlink this script as `arche` on the PATH so later runs are just `arche <cmd>`.
 install_shim() {
+  local dest="$HOME/.local/bin/arche"
+  if [ -e "$dest" ] && [ ! -L "$dest" ]; then
+    echo "arche: $dest exists and is not an Arche symlink; not overwriting" >&2
+    return 1
+  fi
   mkdir -p "$HOME/.local/bin"
-  ln -sf "$ARCHE_ROOT/install.sh" "$HOME/.local/bin/arche"
+  ln -sf "$ARCHE_ROOT/install.sh" "$dest"
   echo "arche: installed shim at ~/.local/bin/arche"
   case ":${PATH:-}:" in
     *":$HOME/.local/bin:"*) : ;;
@@ -166,7 +171,7 @@ main() {
       --link) ARCHE_MODE_LINK="link" ;;
       --yes) ARCHE_MODE="allow-all" ;;
       --dir) shift; ARCHE_TARGET_DIR="${1:-}" ;;
-      --install-shim) install_shim; exit 0 ;;
+      --install-shim) install_shim || exit 1; exit 0 ;;
       *) rest+=("$1") ;;
     esac
     shift
@@ -184,7 +189,7 @@ main() {
     setup) cmd_setup ;;
     reconfigure) cmd_reconfigure ;;
     suggest) arche_suggest ;;
-    docs) arche_catalog > "$ARCHE_ROOT/docs/CATALOG.md"; echo "wrote docs/CATALOG.md" ;;
+    docs) mkdir -p "$ARCHE_ROOT/docs"; arche_catalog > "$ARCHE_ROOT/docs/CATALOG.md"; echo "wrote docs/CATALOG.md" ;;
     *) echo "arche: unknown command '$cmd'" >&2; cmd_help >&2; exit 1 ;;
   esac
 }
