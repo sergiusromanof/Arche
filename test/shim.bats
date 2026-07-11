@@ -11,3 +11,10 @@ load helper
   bash "$ARCHE_ROOT/install.sh" --install-shim
   [ "$(readlink "$HOME/.local/bin/arche")" = "$ARCHE_ROOT/install.sh" ]
 }
+
+@test "--install-shim refuses to overwrite a non-symlink at the target" {
+  mkdir -p "$HOME/.local/bin"; echo "mine" > "$HOME/.local/bin/arche"
+  run bash "$ARCHE_ROOT/install.sh" --install-shim
+  [ "$status" -ne 0 ]
+  [ "$(cat "$HOME/.local/bin/arche")" = "mine" ]
+}
