@@ -67,6 +67,17 @@ arche list                      # see available assets
 Arche is safe by default: `--dry-run` previews every action, files are backed up before any edit, a manifest enables exact uninstall, it never overwrites files it did not create, it never executes your scripts, and it refuses to run as root.
 Permission modes: `interactive` (default), `allow-all` (`--yes`), `restricted`.
 
+## Development
+
+Run the test suite and linter locally:
+
+```
+bats test/
+shellcheck -x -P SCRIPTDIR install.sh lib/*.sh lib/adapters/*.sh
+```
+
+`bats-core` and `shellcheck` are dev-only tools; the installer itself has no runtime dependencies beyond a POSIX shell and `git`.
+
 ## License
 
 MIT — see [`LICENSE`](LICENSE).

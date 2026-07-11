@@ -145,6 +145,17 @@ cmd_setup() {
 
 cmd_reconfigure() { cmd_setup; }
 
+# Symlink this script as `arche` on the PATH so later runs are just `arche <cmd>`.
+install_shim() {
+  mkdir -p "$HOME/.local/bin"
+  ln -sf "$ARCHE_ROOT/install.sh" "$HOME/.local/bin/arche"
+  echo "arche: installed shim at ~/.local/bin/arche"
+  case ":${PATH:-}:" in
+    *":$HOME/.local/bin:"*) : ;;
+    *) echo "note: add ~/.local/bin to your PATH to use 'arche' directly" >&2 ;;
+  esac
+}
+
 main() {
   ARCHE_DRY_RUN=0; ARCHE_MODE_LINK="link"; ARCHE_TARGET_DIR=""
   local -a rest=()
@@ -155,6 +166,7 @@ main() {
       --link) ARCHE_MODE_LINK="link" ;;
       --yes) ARCHE_MODE="allow-all" ;;
       --dir) shift; ARCHE_TARGET_DIR="${1:-}" ;;
+      --install-shim) install_shim; exit 0 ;;
       *) rest+=("$1") ;;
     esac
     shift
