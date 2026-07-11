@@ -172,6 +172,7 @@ main() {
     setup) cmd_setup ;;
     reconfigure) cmd_reconfigure ;;
     suggest) arche_suggest ;;
+    docs) arche_catalog > "$ARCHE_ROOT/docs/CATALOG.md"; echo "wrote docs/CATALOG.md" ;;
     *) echo "arche: unknown command '$cmd'" >&2; cmd_help >&2; exit 1 ;;
   esac
 }
