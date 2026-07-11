@@ -168,6 +168,17 @@ install_shim() {
   esac
 }
 
+# Update the checkout, re-apply everything, and refresh the shim.
+cmd_update() {
+  if ! git -C "$ARCHE_ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo "arche: $ARCHE_ROOT is not a git checkout; update needs a cloned repo" >&2
+    exit 1
+  fi
+  git -C "$ARCHE_ROOT" pull --ff-only
+  cmd_sync
+  install_shim
+}
+
 main() {
   ARCHE_DRY_RUN=0; ARCHE_MODE_LINK="link"; ARCHE_TARGET_DIR=""
   local -a rest=()
@@ -197,6 +208,7 @@ main() {
     reconfigure) cmd_reconfigure ;;
     suggest) arche_suggest ;;
     docs) mkdir -p "$ARCHE_ROOT/docs"; arche_catalog > "$ARCHE_ROOT/docs/CATALOG.md"; echo "wrote docs/CATALOG.md" ;;
+    update) arche_require_not_root; cmd_update ;;
     *) echo "arche: unknown command '$cmd'" >&2; cmd_help >&2; exit 1 ;;
   esac
 }

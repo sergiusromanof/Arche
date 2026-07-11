@@ -33,3 +33,13 @@ load helper
   run arche_local_version
   [ -n "$output" ]
 }
+
+@test "update fails clearly when the checkout is not a git repo" {
+  tmp="$(mktemp -d)"
+  cp "$ARCHE_ROOT/install.sh" "$tmp/"
+  cp -R "$ARCHE_ROOT/lib" "$tmp/"
+  run bash "$tmp/install.sh" update
+  rm -rf "$tmp"
+  [ "$status" -ne 0 ] || { echo "expected non-zero exit, got $status"; return 1; }
+  [[ "$output" == *"not a git"* ]] || { echo "output lacked 'not a git': $output"; return 1; }
+}
