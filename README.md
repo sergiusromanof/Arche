@@ -19,6 +19,8 @@ Scripts install to `~/.local/bin` on every target. See [`docs/targets/`](docs/ta
 
 `skills`, `scripts`, `prompts`, `commands`, `agents`, `rules`. New types can be added later without a redesign.
 
+See [`docs/CATALOG.md`](docs/CATALOG.md) for the generated catalog of what is currently available.
+
 ## Repo layout
 
 ```
@@ -66,6 +68,19 @@ arche list                      # see available assets
 
 Arche is safe by default: `--dry-run` previews every action, files are backed up before any edit, a manifest enables exact uninstall, it never overwrites files it did not create, it never executes your scripts, and it refuses to run as root.
 Permission modes: `interactive` (default), `allow-all` (`--yes`), `restricted`.
+
+## Configuration
+
+Run `arche setup` once to write `~/.config/arche/config` (permission mode, install mode, preferred language); change it later with `arche reconfigure`.
+
+- **Templating** — assets may contain `{{VAR}}` placeholders filled from your config at install time.
+- **Overrides** — a file at `~/.config/arche/overrides/<id>` overrides a shipped asset without forking, and survives `git pull`.
+- **Memory** — each installed asset gets `~/.config/arche/memory/<id>.md`, a notes store that persists and grows across sessions.
+- **Usage** — set `USAGE=on` in the config to record installs locally; `arche suggest` lists assets you have not installed yet.
+
+## Contributing
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for how to add assets or target adapters, run the tests, and open a PR.
 
 ## Development
 
