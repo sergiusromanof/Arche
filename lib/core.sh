@@ -149,12 +149,14 @@ arche_place() {
 _arche_block_begin() { echo "# >>> arche:$1 BEGIN (managed — do not edit) >>>"; }
 _arche_block_end()   { echo "# <<< arche:$1 END <<<"; }
 
-# Insert or replace the marked region for <id> in <file>; back up first; idempotent.
+# Insert or replace the marked region for <id> in <file>; idempotent.
+# Backs up the file only when the region actually changes, so repeated syncs
+# never accumulate identical backups.
 arche_block_apply() {
   local file="$1" id="$2" content="$3"
   local begin end; begin="$(_arche_block_begin "$id")"; end="$(_arche_block_end "$id")"
+  local existed=0; [ -e "$file" ] && existed=1
   mkdir -p "$(dirname "$file")"
-  arche_backup "$file" >/dev/null   # no-op if the file does not exist yet
   touch "$file"
   local tmp; tmp="$(mktemp)"
   if grep -qF "$begin" "$file"; then
@@ -168,7 +170,12 @@ arche_block_apply() {
     cp "$file" "$tmp"
     printf '\n%s\n%s\n%s\n' "$begin" "$content" "$end" >> "$tmp"
   fi
-  mv "$tmp" "$file"
+  if cmp -s "$tmp" "$file"; then
+    rm -f "$tmp"                                       # unchanged → no backup, no rewrite
+  else
+    if [ "$existed" = 1 ]; then arche_backup "$file" >/dev/null; fi
+    mv "$tmp" "$file"
+  fi
   arche_manifest_add block "$file" "$id"
 }
 

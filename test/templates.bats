@@ -4,8 +4,8 @@ load helper
 @test "each markdown asset type ships a template with a targets field" {
   for t in skill prompt command agent rule; do
     f="$(ls "$ARCHE_ROOT/templates/$t/"*.md 2>/dev/null | head -1)"
-    [ -n "$f" ]
-    grep -q '^targets:' "$f"
+    [ -n "$f" ] || { echo "missing template for $t"; return 1; }
+    grep -q '^targets:' "$f" || { echo "no targets: field in $f"; return 1; }
   done
 }
 
