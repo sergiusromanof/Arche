@@ -23,6 +23,11 @@ cli() { bash "$ARCHE_ROOT/install.sh" "$@"; }
   [ ! -e "$HOME/.local/bin/demo-tool" ]
 }
 
+@test "installing a script does not chmod its source through the symlink" {
+  cli install claude scripts
+  [ ! -x "$ARCHE_ROOT/test/fixtures/scripts/demo-tool.sh" ]
+}
+
 @test "uninstall removes the skill link" {
   cli install claude skills
   run cli uninstall claude skills

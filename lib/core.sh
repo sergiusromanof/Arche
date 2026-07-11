@@ -240,7 +240,8 @@ arche_install_asset() {
     rm -f "$tmp"
   else
     arche_place "$src" "$dest" "$mode" || return 2
-    if [ "$type" = "scripts" ] && [ -f "$dest" ]; then chmod +x "$dest"; fi
+    # Make copies executable, but never chmod a symlink (that would mutate the source asset).
+    if [ "$type" = "scripts" ] && [ -f "$dest" ] && [ ! -L "$dest" ]; then chmod +x "$dest"; fi
   fi
   arche_usage_record install "$target/$type/$id"
 }
