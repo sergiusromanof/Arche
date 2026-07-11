@@ -416,11 +416,23 @@ arche_should_check() {
   stamp="$(arche_check_stamp)"
   [ -f "$stamp" ] || return 0
   last="$(cat "$stamp" 2>/dev/null || echo 0)"
+  case "$last" in ''|*[!0-9]*) last=0 ;; esac   # tolerate a corrupted stamp
   [ "$(( now - last ))" -ge 86400 ]
 }
 
 # Latest release tag in the checkout (empty if none or not a git checkout).
 arche_latest_tag() { git -C "$ARCHE_ROOT" tag --sort=-v:refname 2>/dev/null | head -1; }
+
+# Targets that already have at least one entry in the manifest (space-separated).
+arche_installed_targets() {
+  local mf; mf="$(arche_manifest_path)"
+  [ -f "$mf" ] || return 0
+  local t root
+  for t in claude codex generic; do
+    root="$("adapter_${t}_root")"
+    if grep -qF "$root/" "$mf" 2>/dev/null; then printf '%s ' "$t"; fi
+  done
+}
 
 # Print a one-line hint (to stderr) if a newer release tag exists; throttled to once a day.
 # Never blocks and never fails the command.

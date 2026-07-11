@@ -175,8 +175,13 @@ cmd_update() {
     echo "arche: $ARCHE_ROOT is not a git checkout; update needs a cloned repo" >&2
     exit 1
   fi
-  git -C "$ARCHE_ROOT" pull --ff-only
-  cmd_sync
+  git -C "$ARCHE_ROOT" pull --ff-only || {
+    echo "arche: 'git pull --ff-only' failed in $ARCHE_ROOT; resolve it and retry" >&2
+    exit 1
+  }
+  # Re-apply only the targets the user already installed into (never populate unused ones).
+  local targets; targets="$(arche_installed_targets)"
+  if [ -n "$targets" ]; then cmd_sync "$targets"; fi
   install_shim
 }
 
