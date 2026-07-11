@@ -191,6 +191,7 @@ arche_install_asset() {
   esac
   local dest; dest="$("adapter_${target}_dest" "$type" "$id")"
   if [ "${ARCHE_DRY_RUN:-0}" = "1" ]; then echo "would install $type/$id -> $dest"; return 0; fi
+  if [ "$type" = "rules" ] || [ "$type" = "scripts" ]; then arche_permit "$type/$id" || return 2; fi
 
   # Resolve the source; a local override takes precedence over the shipped asset.
   local src tmp
@@ -275,4 +276,20 @@ arche_resolved_file() {
   if [ -f "$ov.md" ]; then echo "$ov.md"; return; fi
   if [ -f "$ov" ]; then echo "$ov"; return; fi
   arche_asset_file "$type" "$id"
+}
+
+# Decide whether a risky action (rule edits, scripts on PATH) is allowed.
+# Modes: allow-all (yes), restricted (no), interactive (prompt).
+arche_permit() {
+  local label="$1" mode
+  mode="${ARCHE_MODE:-$(arche_config_get MODE interactive)}"
+  case "$mode" in
+    allow-all) return 0 ;;
+    restricted) echo "restricted: refusing $label" >&2; return 1 ;;
+    *)
+      local ans
+      printf 'arche: allow %s? [y/N] ' "$label" >&2
+      read -r ans || true
+      [ "$ans" = "y" ] || [ "$ans" = "Y" ] ;;
+  esac
 }
