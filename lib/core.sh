@@ -165,3 +165,43 @@ arche_block_remove() {
   ' "$file" > "$tmp"
   mv "$tmp" "$file"
 }
+
+arche_valid_target() { case "$1" in claude|codex|generic) return 0 ;; *) return 1 ;; esac; }
+
+# Echo a file's body with any leading YAML frontmatter stripped.
+arche_body() {
+  awk 'NR==1 && $0=="---"{fm=1; next} fm && $0=="---"{fm=0; next} !fm{print}' "$1"
+}
+
+# Source path used for placement: skills link the whole directory, others the file.
+arche_asset_src() {
+  local type="$1" id="$2"
+  if [ "$type" = "skills" ]; then echo "$(arche_type_dir skills)/$id"; else arche_asset_file "$type" "$id"; fi
+}
+
+# Install one asset into a target. Returns 0 installed, 2 skipped.
+arche_install_asset() {
+  local target="$1" type="$2" id="$3" mode="${4:-link}"
+  "adapter_${target}_supports" "$type" || { echo "skip: $target has no place for $type"; return 2; }
+  local targets; targets="$(arche_asset_targets "$type" "$id")"
+  case " $targets " in
+    *" $target "*) : ;;
+    *) echo "skip: $type/$id not targeted at $target"; return 2 ;;
+  esac
+  local src dest; src="$(arche_asset_src "$type" "$id")"; dest="$("adapter_${target}_dest" "$type" "$id")"
+  if [ "${ARCHE_DRY_RUN:-0}" = "1" ]; then echo "would install $type/$id -> $dest"; return 0; fi
+  if [ "$type" = "rules" ]; then
+    arche_block_apply "$dest" "$id" "$(arche_body "$src")"
+  else
+    arche_place "$src" "$dest" "$mode" || return 2
+    if [ "$type" = "scripts" ] && [ -f "$dest" ]; then chmod +x "$dest"; fi
+  fi
+}
+
+# Remove one asset from a target.
+arche_uninstall_asset() {
+  local target="$1" type="$2" id="$3"
+  "adapter_${target}_supports" "$type" || return 0
+  local dest; dest="$("adapter_${target}_dest" "$type" "$id")"
+  if [ "$type" = "rules" ]; then arche_block_remove "$dest" "$id"; else rm -rf "$dest"; fi
+}
