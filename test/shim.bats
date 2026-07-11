@@ -12,6 +12,13 @@ load helper
   [ "$(readlink "$HOME/.local/bin/arche")" = "$ARCHE_ROOT/install.sh" ]
 }
 
+@test "running arche through the installed shim works" {
+  bash "$ARCHE_ROOT/install.sh" --install-shim
+  run "$HOME/.local/bin/arche" help
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Usage: arche"* ]]
+}
+
 @test "--install-shim refuses to overwrite a non-symlink at the target" {
   mkdir -p "$HOME/.local/bin"; echo "mine" > "$HOME/.local/bin/arche"
   run bash "$ARCHE_ROOT/install.sh" --install-shim

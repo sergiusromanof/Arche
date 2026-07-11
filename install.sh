@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ARCHE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Resolve this script's real directory, following symlinks (e.g. the `arche` shim).
+_arche_src="${BASH_SOURCE[0]}"
+while [ -L "$_arche_src" ]; do
+  _arche_dir="$(cd -P "$(dirname "$_arche_src")" && pwd)"
+  _arche_src="$(readlink "$_arche_src")"
+  case "$_arche_src" in /*) : ;; *) _arche_src="$_arche_dir/$_arche_src" ;; esac
+done
+ARCHE_ROOT="$(cd -P "$(dirname "$_arche_src")" && pwd)"
 export ARCHE_ROOT
 : "${ARCHE_ASSETS_ROOT:=$ARCHE_ROOT}"
 export ARCHE_ASSETS_ROOT
