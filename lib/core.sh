@@ -331,8 +331,8 @@ arche_permit() {
 
 arche_memory_file() { echo "$ARCHE_CONFIG_DIR/memory/$1.md"; }
 
-# Create the per-asset memory file (a notes store that grows across sessions) if
-# it does not exist yet; never overwrites accumulated notes. Echoes its path.
+# Create the per-asset memory file if it does not exist yet; never overwrites accumulated notes.
+# The file is a notes store that grows across sessions. Echoes its path.
 arche_memory_ensure() {
   local id="$1" f
   f="$(arche_memory_file "$id")"

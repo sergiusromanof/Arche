@@ -25,7 +25,7 @@ Commands:
   uninstall <target> [asset]  Remove installed assets
   doctor                      Report installation health
   setup | reconfigure         Configure Arche
-  suggest                     Adaptive recommendations
+  suggest                     Suggest assets you have not installed yet
   docs                        Regenerate the catalog
   help                        Show this help
 
