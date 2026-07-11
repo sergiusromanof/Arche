@@ -219,6 +219,7 @@ arche_install_asset() {
   local dest; dest="$("adapter_${target}_dest" "$type" "$id")"
   if [ "${ARCHE_DRY_RUN:-0}" = "1" ]; then echo "would install $type/$id -> $dest"; return 0; fi
   if [ "$type" = "rules" ] || [ "$type" = "scripts" ]; then arche_permit "$type/$id" || return 2; fi
+  arche_memory_ensure "$id" >/dev/null   # ensure a persistent notes store for this asset
 
   # Resolve the source; a local override takes precedence over the shipped asset.
   local src tmp
@@ -325,4 +326,18 @@ arche_permit() {
       read -r ans || true
       [ "$ans" = "y" ] || [ "$ans" = "Y" ] ;;
   esac
+}
+
+arche_memory_file() { echo "$ARCHE_CONFIG_DIR/memory/$1.md"; }
+
+# Create the per-asset memory file (a notes store that grows across sessions) if
+# it does not exist yet; never overwrites accumulated notes. Echoes its path.
+arche_memory_ensure() {
+  local id="$1" f
+  f="$(arche_memory_file "$id")"
+  mkdir -p "$(dirname "$f")"
+  if [ ! -f "$f" ]; then
+    printf '# Arche memory: %s\n\nNotes and preferences for "%s" accumulate here across sessions.\n' "$id" "$id" > "$f"
+  fi
+  echo "$f"
 }
