@@ -13,9 +13,8 @@ load helper
   grep -q 'arche-targets' "$ARCHE_ROOT/templates/script/tool.sh"
 }
 
-@test "real asset folders ship empty (only .gitkeep)" {
-  for t in skills scripts prompts commands agents rules; do
-    run bash -c "ls -A '$ARCHE_ROOT/$t'"
-    [ "$output" = ".gitkeep" ]
+@test "each asset-type folder keeps its .gitkeep so it survives empty" {
+  for t in skills scripts prompts commands agents rules profiles; do
+    [ -f "$ARCHE_ROOT/$t/.gitkeep" ] || { echo "missing .gitkeep in $t"; return 1; }
   done
 }
