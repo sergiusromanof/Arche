@@ -133,8 +133,9 @@ _arche_block_end()   { echo "# <<< arche:$1 END <<<"; }
 arche_block_apply() {
   local file="$1" id="$2" content="$3"
   local begin end; begin="$(_arche_block_begin "$id")"; end="$(_arche_block_end "$id")"
-  mkdir -p "$(dirname "$file")"; touch "$file"
-  arche_backup "$file" >/dev/null
+  mkdir -p "$(dirname "$file")"
+  arche_backup "$file" >/dev/null   # no-op if the file does not exist yet
+  touch "$file"
   local tmp; tmp="$(mktemp)"
   if grep -qF "$begin" "$file"; then
     awk -v b="$begin" -v e="$end" -v c="$content" '
