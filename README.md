@@ -62,6 +62,7 @@ cd Arche
 arche setup                     # one-time configuration
 arche install claude            # install everything for Claude Code
 arche list                      # see available assets
+arche update                    # later: pull latest, re-apply, refresh the shim
 ```
 
 ## Safety
@@ -77,6 +78,7 @@ Run `arche setup` once to write `~/.config/arche/config` (permission mode, insta
 - **Overrides** — a file at `~/.config/arche/overrides/<id>` overrides a shipped asset without forking, and survives `git pull`.
 - **Memory** — each installed asset gets `~/.config/arche/memory/<id>.md`, a notes store that persists and grows across sessions.
 - **Usage** — set `USAGE=on` in the config to record installs locally; `arche suggest` lists assets you have not installed yet.
+- **Updates** — `arche update` pulls the latest, re-applies everything, and refreshes the shim. Arche also prints a one-line hint (at most once a day) when a newer release tag is available; it never updates on its own.
 
 ## Contributing
 

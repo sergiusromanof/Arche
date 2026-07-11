@@ -34,6 +34,12 @@ load helper
   [ -n "$output" ]
 }
 
+@test "update_notice records the check timestamp and returns 0" {
+  run arche_update_notice
+  [ "$status" -eq 0 ]
+  [ -f "$(arche_check_stamp)" ]
+}
+
 @test "update fails clearly when the checkout is not a git repo" {
   tmp="$(mktemp -d)"
   cp "$ARCHE_ROOT/install.sh" "$tmp/"
