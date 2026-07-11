@@ -125,3 +125,43 @@ arche_place() {
   fi
   return 0
 }
+
+_arche_block_begin() { echo "# >>> arche:$1 BEGIN (managed — do not edit) >>>"; }
+_arche_block_end()   { echo "# <<< arche:$1 END <<<"; }
+
+# Insert or replace the marked region for <id> in <file>; back up first; idempotent.
+arche_block_apply() {
+  local file="$1" id="$2" content="$3"
+  local begin end; begin="$(_arche_block_begin "$id")"; end="$(_arche_block_end "$id")"
+  mkdir -p "$(dirname "$file")"; touch "$file"
+  arche_backup "$file" >/dev/null
+  local tmp; tmp="$(mktemp)"
+  if grep -qF "$begin" "$file"; then
+    awk -v b="$begin" -v e="$end" -v c="$content" '
+      $0==b {print; print c; skip=1; next}
+      $0==e {skip=0; print; next}
+      skip {next}
+      {print}
+    ' "$file" > "$tmp"
+  else
+    cp "$file" "$tmp"
+    printf '\n%s\n%s\n%s\n' "$begin" "$content" "$end" >> "$tmp"
+  fi
+  mv "$tmp" "$file"
+  arche_manifest_add block "$file" "$id"
+}
+
+# Remove only the marked region for <id> from <file>.
+arche_block_remove() {
+  local file="$1" id="$2"
+  [ -f "$file" ] || return 0
+  local begin end; begin="$(_arche_block_begin "$id")"; end="$(_arche_block_end "$id")"
+  local tmp; tmp="$(mktemp)"
+  awk -v b="$begin" -v e="$end" '
+    $0==b {skip=1; next}
+    $0==e {skip=0; next}
+    skip {next}
+    {print}
+  ' "$file" > "$tmp"
+  mv "$tmp" "$file"
+}
