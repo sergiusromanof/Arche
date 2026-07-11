@@ -242,6 +242,7 @@ arche_install_asset() {
     arche_place "$src" "$dest" "$mode" || return 2
     if [ "$type" = "scripts" ] && [ -f "$dest" ]; then chmod +x "$dest"; fi
   fi
+  arche_usage_record install "$target/$type/$id"
 }
 
 # Remove one asset from a target.
@@ -340,4 +341,35 @@ arche_memory_ensure() {
     printf '# Arche memory: %s\n\nNotes and preferences for "%s" accumulate here across sessions.\n' "$id" "$id" > "$f"
   fi
   echo "$f"
+}
+
+arche_usage_log() { echo "$ARCHE_CONFIG_DIR/usage.log"; }
+
+# Append a usage event, but only when tracking is enabled (opt-in; default off).
+arche_usage_record() {
+  [ "$(arche_config_get USAGE off)" = "on" ] || return 0
+  mkdir -p "$ARCHE_CONFIG_DIR"
+  printf '%s\t%s\t%s\n' "$(date +%s)" "$1" "$2" >> "$(arche_usage_log)"
+}
+
+# True if the manifest already records an asset with this id (by dest basename or block meta).
+arche_manifest_lists_id() {
+  local id="$1" mf; mf="$(arche_manifest_path)"
+  [ -f "$mf" ] || return 1
+  awk -F'\t' -v id="$id" '
+    { n=split($2,a,"/"); base=a[n]; sub(/\.[^.]*$/,"",base); if (base==id || $3==id) f=1 }
+    END { exit !f }' "$mf"
+}
+
+# List assets that are available but not yet installed (advisory).
+arche_suggest() {
+  local type id
+  echo "Suggestions (available but not yet installed):"
+  # shellcheck disable=SC2046  # intentional word-splitting of the type list
+  for type in $(arche_types); do
+    # shellcheck disable=SC2046  # intentional word-splitting of the id list
+    for id in $(arche_list_ids "$type"); do
+      arche_manifest_lists_id "$id" || echo "  $type/$id — $(arche_meta "$type" "$id" description)"
+    done
+  done
 }

@@ -171,6 +171,7 @@ main() {
     doctor) cmd_doctor "$@" ;;
     setup) cmd_setup ;;
     reconfigure) cmd_reconfigure ;;
+    suggest) arche_suggest ;;
     *) echo "arche: unknown command '$cmd'" >&2; cmd_help >&2; exit 1 ;;
   esac
 }
