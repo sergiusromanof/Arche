@@ -124,6 +124,27 @@ cmd_doctor() {
   done < "$mf"
 }
 
+cmd_setup() {
+  local mode="${ARCHE_MODE:-interactive}"
+  if [ "$mode" = "allow-all" ]; then
+    arche_config_set MODE interactive
+    arche_config_set INSTALL_MODE link
+    arche_config_set LANGUAGE ""
+    echo "arche: wrote default config to $(arche_config_file)"
+    return 0
+  fi
+  local ans
+  printf 'Permission mode [interactive/allow-all/restricted] (interactive): '
+  read -r ans || true; arche_config_set MODE "${ans:-interactive}"
+  printf 'Install mode [link/copy] (link): '
+  read -r ans || true; arche_config_set INSTALL_MODE "${ans:-link}"
+  printf 'Preferred language (blank to skip): '
+  read -r ans || true; arche_config_set LANGUAGE "$ans"
+  echo "arche: wrote config to $(arche_config_file)"
+}
+
+cmd_reconfigure() { cmd_setup; }
+
 main() {
   ARCHE_DRY_RUN=0; ARCHE_MODE_LINK="link"; ARCHE_TARGET_DIR=""
   local -a rest=()
@@ -148,6 +169,8 @@ main() {
     sync) arche_require_not_root; cmd_sync "$@" ;;
     uninstall) cmd_uninstall "$@" ;;
     doctor) cmd_doctor "$@" ;;
+    setup) cmd_setup ;;
+    reconfigure) cmd_reconfigure ;;
     *) echo "arche: unknown command '$cmd'" >&2; cmd_help >&2; exit 1 ;;
   esac
 }

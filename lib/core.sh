@@ -214,3 +214,28 @@ arche_profile_specs() {
   [ -f "$file" ] || { echo "arche: no profile '$name'" >&2; return 1; }
   grep -vE '^[[:space:]]*(#|$)' "$file"
 }
+
+arche_config_file() { echo "$ARCHE_CONFIG_DIR/config"; }
+
+# Read a config value, or a default if the key is absent.
+arche_config_get() {
+  local key="$1" def="${2:-}" file val
+  file="$(arche_config_file)"
+  [ -f "$file" ] || { echo "$def"; return 0; }
+  val="$(grep -m1 -E "^$key=" "$file" 2>/dev/null | sed -E "s/^$key=//" || true)"
+  if [ -n "$val" ]; then echo "$val"; else echo "$def"; fi
+}
+
+# Insert or update a key in the config file (idempotent).
+arche_config_set() {
+  local key="$1" value="$2" file
+  file="$(arche_config_file)"
+  mkdir -p "$(dirname "$file")"; touch "$file"
+  if grep -qE "^$key=" "$file"; then
+    local tmp; tmp="$(mktemp)"
+    sed -E "s|^$key=.*|$key=$value|" "$file" > "$tmp"
+    mv "$tmp" "$file"
+  else
+    printf '%s=%s\n' "$key" "$value" >> "$file"
+  fi
+}
