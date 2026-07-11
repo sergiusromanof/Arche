@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+
+# Arche-generated backups (written into the target dir during install — never commit)
+*.arche.bak.*
+
+# Test scratch — bats temp dirs and the isolated $HOME from test/helper.bash
+test/.bats-tmp/
+*.tmp
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# Runtime state — belongs in ~/.config/arche, guard against it landing in-repo
+/config
+/manifest
+/usage.log
