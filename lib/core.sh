@@ -189,10 +189,26 @@ arche_install_asset() {
     *" $target "*) : ;;
     *) echo "skip: $type/$id not targeted at $target"; return 2 ;;
   esac
-  local src dest; src="$(arche_asset_src "$type" "$id")"; dest="$("adapter_${target}_dest" "$type" "$id")"
+  local dest; dest="$("adapter_${target}_dest" "$type" "$id")"
   if [ "${ARCHE_DRY_RUN:-0}" = "1" ]; then echo "would install $type/$id -> $dest"; return 0; fi
+
+  # Resolve the source; a local override takes precedence over the shipped asset.
+  local src tmp
+  if [ "$type" = "skills" ]; then
+    src="$(arche_asset_src "$type" "$id")"
+    if [ -d "$ARCHE_CONFIG_DIR/overrides/$id" ]; then src="$ARCHE_CONFIG_DIR/overrides/$id"; fi
+  else
+    src="$(arche_resolved_file "$type" "$id")"
+  fi
+
   if [ "$type" = "rules" ]; then
-    arche_block_apply "$dest" "$id" "$(arche_body "$src")"
+    tmp="$(mktemp)"; arche_render "$src" "$tmp"
+    arche_block_apply "$dest" "$id" "$(arche_body "$tmp")"
+    rm -f "$tmp"
+  elif [ "$type" != "scripts" ] && grep -q '{{' "$src" 2>/dev/null; then
+    tmp="$(mktemp)"; arche_render "$src" "$tmp"
+    arche_place "$tmp" "$dest" copy || { rm -f "$tmp"; return 2; }
+    rm -f "$tmp"
   else
     arche_place "$src" "$dest" "$mode" || return 2
     if [ "$type" = "scripts" ] && [ -f "$dest" ]; then chmod +x "$dest"; fi
@@ -238,4 +254,25 @@ arche_config_set() {
   else
     printf '%s=%s\n' "$key" "$value" >> "$file"
   fi
+}
+
+# Copy <in> to <out>, replacing {{VAR}} placeholders with config values.
+arche_render() {
+  local in="$1" out="$2" content var
+  content="$(cat "$in")"
+  while IFS= read -r var; do
+    [ -z "$var" ] && continue
+    content="${content//\{\{$var\}\}/$(arche_config_get "$var")}"
+  done < <(grep -oE '\{\{[A-Z_]+\}\}' "$in" 2>/dev/null | sed -E 's/[{}]//g' | sort -u)
+  printf '%s\n' "$content" > "$out"
+}
+
+# Path to use for an asset: a local override wins over the shipped asset.
+arche_resolved_file() {
+  local type="$1" id="$2"
+  local ov="$ARCHE_CONFIG_DIR/overrides/$id"
+  if [ "$type" = "skills" ] && [ -d "$ov" ]; then echo "$ov/SKILL.md"; return; fi
+  if [ -f "$ov.md" ]; then echo "$ov.md"; return; fi
+  if [ -f "$ov" ]; then echo "$ov"; return; fi
+  arche_asset_file "$type" "$id"
 }
