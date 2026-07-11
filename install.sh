@@ -56,7 +56,13 @@ cmd_install() {
   arche_valid_target "$target" || { echo "arche: unknown target '$target'" >&2; exit 1; }
   local mode="${ARCHE_MODE_LINK:-link}"
   local specs
-  if [ "$#" -gt 0 ]; then specs="$*"; else specs="$(arche_types)"; fi
+  if [ "${1:-}" = "--profile" ]; then
+    specs="$(arche_profile_specs "${2:-}")" || exit 1
+  elif [ "$#" -gt 0 ]; then
+    specs="$*"
+  else
+    specs="$(arche_types)"
+  fi
   local spec type id
   # shellcheck disable=SC2086  # intentional word-splitting of the spec list
   for spec in $specs; do

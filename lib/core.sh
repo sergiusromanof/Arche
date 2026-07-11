@@ -206,3 +206,11 @@ arche_uninstall_asset() {
   local dest; dest="$("adapter_${target}_dest" "$type" "$id")"
   if [ "$type" = "rules" ]; then arche_block_remove "$dest" "$id"; else rm -rf "$dest"; fi
 }
+
+# List the specs (type or type/id, one per line) in a profile, skipping comments and blanks.
+arche_profile_specs() {
+  local name="$1"
+  local file="$ARCHE_ASSETS_ROOT/profiles/$name.txt"
+  [ -f "$file" ] || { echo "arche: no profile '$name'" >&2; return 1; }
+  grep -vE '^[[:space:]]*(#|$)' "$file"
+}

@@ -1,0 +1,3 @@
+# demo profile
+skills/demo-skill
+rules/demo-rule
