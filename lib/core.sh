@@ -255,32 +255,32 @@ arche_profile_specs() {
   local name="$1"
   local file="$ARCHE_ASSETS_ROOT/profiles/$name.txt"
   [ -f "$file" ] || { echo "arche: no profile '$name'" >&2; return 1; }
-  grep -vE '^[[:space:]]*(#|$)' "$file"
+  grep -vE '^[[:space:]]*(#|$)' "$file" || true   # empty/comment-only profile is not an error
 }
 
 arche_config_file() { echo "$ARCHE_CONFIG_DIR/config"; }
 
 # Read a config value, or a default if the key is absent.
+# A key present but set to an empty value returns the empty value, not the default.
 arche_config_get() {
-  local key="$1" def="${2:-}" file val
+  local key="$1" def="${2:-}" file line
   file="$(arche_config_file)"
   [ -f "$file" ] || { echo "$def"; return 0; }
-  val="$(grep -m1 -E "^$key=" "$file" 2>/dev/null | sed -E "s/^$key=//" || true)"
-  if [ -n "$val" ]; then echo "$val"; else echo "$def"; fi
+  line="$(grep -m1 -E "^$key=" "$file" 2>/dev/null || true)"
+  if [ -n "$line" ]; then printf '%s\n' "${line#*=}"; else echo "$def"; fi
 }
 
 # Insert or update a key in the config file (idempotent).
+# Drops any existing line for the key and appends the new one, so values may
+# contain any characters (no sed substitution that could interpret & | \).
 arche_config_set() {
-  local key="$1" value="$2" file
+  local key="$1" value="$2" file tmp
   file="$(arche_config_file)"
   mkdir -p "$(dirname "$file")"; touch "$file"
-  if grep -qE "^$key=" "$file"; then
-    local tmp; tmp="$(mktemp)"
-    sed -E "s|^$key=.*|$key=$value|" "$file" > "$tmp"
-    mv "$tmp" "$file"
-  else
-    printf '%s=%s\n' "$key" "$value" >> "$file"
-  fi
+  tmp="$(mktemp)"
+  grep -vE "^$key=" "$file" > "$tmp" || true
+  printf '%s=%s\n' "$key" "$value" >> "$tmp"
+  mv "$tmp" "$file"
 }
 
 # Copy <in> to <out>, replacing {{VAR}} placeholders with config values.
@@ -290,7 +290,7 @@ arche_render() {
   while IFS= read -r var; do
     [ -z "$var" ] && continue
     content="${content//\{\{$var\}\}/$(arche_config_get "$var")}"
-  done < <(grep -oE '\{\{[A-Z_]+\}\}' "$in" 2>/dev/null | sed -E 's/[{}]//g' | sort -u)
+  done < <(grep -oE '\{\{[A-Za-z0-9_]+\}\}' "$in" 2>/dev/null | sed -E 's/[{}]//g' | sort -u)
   printf '%s\n' "$content" > "$out"
 }
 
