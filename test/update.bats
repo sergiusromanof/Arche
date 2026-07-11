@@ -34,6 +34,14 @@ load helper
   [ -n "$output" ]
 }
 
+@test "installed_targets lists only targets present in the manifest" {
+  bash "$ARCHE_ROOT/install.sh" install claude skills
+  run arche_installed_targets
+  [[ "$output" == *"claude"* ]]
+  [[ "$output" != *"codex"* ]]
+  [[ "$output" != *"generic"* ]]
+}
+
 @test "update_notice records the check timestamp and returns 0" {
   run arche_update_notice
   [ "$status" -eq 0 ]
