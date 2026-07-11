@@ -421,3 +421,18 @@ arche_should_check() {
 
 # Latest release tag in the checkout (empty if none or not a git checkout).
 arche_latest_tag() { git -C "$ARCHE_ROOT" tag --sort=-v:refname 2>/dev/null | head -1; }
+
+# Print a one-line hint (to stderr) if a newer release tag exists; throttled to once a day.
+# Never blocks and never fails the command.
+arche_update_notice() {
+  local now tag
+  now="$(date +%s)"
+  arche_should_check "$now" || return 0
+  mkdir -p "$ARCHE_CONFIG_DIR"
+  printf '%s' "$now" > "$(arche_check_stamp)"
+  tag="$(arche_latest_tag)"
+  [ -n "$tag" ] || return 0
+  if arche_version_gt "$tag" "$(arche_local_version)"; then
+    echo "arche: a newer version ($tag) is available — run 'arche update'" >&2
+  fi
+}

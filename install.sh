@@ -29,6 +29,7 @@ Commands:
   list [--tag T]              List assets and their supported targets
   install <target> [asset..]  Install assets into a target
   sync [target]               Re-apply everything (after git pull)
+  update                      Pull the latest, re-apply, and refresh the shim
   uninstall <target> [asset]  Remove installed assets
   doctor                      Report installation health
   setup | reconfigure         Configure Arche
@@ -197,6 +198,9 @@ main() {
   export ARCHE_DRY_RUN ARCHE_TARGET_DIR ARCHE_MODE
   if [ "${#rest[@]}" -gt 0 ]; then set -- "${rest[@]}"; else set --; fi
   local cmd="${1:-help}"; shift || true
+  if [ "$cmd" != help ] && [ "$cmd" != -h ] && [ "$cmd" != --help ] && [ "$cmd" != update ]; then
+    arche_update_notice
+  fi
   case "$cmd" in
     help|-h|--help) cmd_help ;;
     list) cmd_list "$@" ;;
