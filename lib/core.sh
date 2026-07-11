@@ -48,7 +48,7 @@ _arche_frontmatter_field() {
 _arche_script_field() {
   local file="$1" key="$2"
   [ -f "$file" ] || return 0
-  grep -m1 -E "^# arche-$key:[ ]*" "$file" 2>/dev/null | sed -E "s/^# arche-$key:[ ]*//"
+  grep -m1 -E "^# arche-$key:[ ]*" "$file" 2>/dev/null | sed -E "s/^# arche-$key:[ ]*//" || true
 }
 
 # Read a metadata field for any asset.
