@@ -13,6 +13,11 @@ setup() {
   mkdir -p "$ARCHE_CONFIG_DIR"
   # shellcheck source=/dev/null
   source "$ARCHE_ROOT/lib/core.sh"
+  for a in "$ARCHE_ROOT"/lib/adapters/*.sh; do
+    [ -e "$a" ] || continue
+    # shellcheck source=/dev/null
+    source "$a"
+  done
 }
 
 teardown() {
