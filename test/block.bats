@@ -25,3 +25,19 @@ load helper
   grep -q 'keep me' "$f"
   ! grep -q 'arche:demo-rule' "$f"
 }
+
+@test "re-applying an unchanged rule creates no new backup" {
+  f="$HOME/CLAUDE.md"
+  arche_block_apply "$f" demo-rule "Be concise."
+  before="$(find "$HOME" -name 'CLAUDE.md.arche.bak.*' | wc -l | tr -d ' ')"
+  arche_block_apply "$f" demo-rule "Be concise."
+  after="$(find "$HOME" -name 'CLAUDE.md.arche.bak.*' | wc -l | tr -d ' ')"
+  [ "$before" = "$after" ]
+}
+
+@test "changing a pre-existing rule file backs it up once" {
+  f="$HOME/CLAUDE.md"; printf 'user\n' > "$f"
+  arche_block_apply "$f" demo-rule "First."
+  n="$(find "$HOME" -name 'CLAUDE.md.arche.bak.*' | wc -l | tr -d ' ')"
+  [ "$n" -ge 1 ]
+}
