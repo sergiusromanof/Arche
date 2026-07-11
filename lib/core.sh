@@ -79,11 +79,29 @@ arche_require_not_root() {
 
 arche_manifest_path() { echo "$ARCHE_CONFIG_DIR/manifest"; }
 
-# Record a change so uninstall can reverse it exactly.
+# Record a change so uninstall can reverse it exactly (deduplicated).
 arche_manifest_add() {
-  local kind="$1" path="$2" meta="${3:-}"
-  mkdir -p "$ARCHE_CONFIG_DIR"
-  printf '%s\t%s\t%s\n' "$kind" "$path" "$meta" >> "$(arche_manifest_path)"
+  local kind="$1" path="$2" meta="${3:-}" mf line
+  mf="$(arche_manifest_path)"
+  mkdir -p "$ARCHE_CONFIG_DIR"; touch "$mf"
+  line="$(printf '%s\t%s\t%s' "$kind" "$path" "$meta")"
+  grep -qxF "$line" "$mf" || printf '%s\n' "$line" >> "$mf"
+}
+
+# True if the manifest records <path> as something Arche installed.
+arche_manifest_has() {
+  local path="$1" mf; mf="$(arche_manifest_path)"
+  [ -f "$mf" ] || return 1
+  awk -F'\t' -v p="$path" '$2==p{found=1} END{exit !found}' "$mf"
+}
+
+# Remove manifest lines for <path> (optionally only those whose meta == $2).
+arche_manifest_remove() {
+  local path="$1" meta="${2:-}" mf tmp
+  mf="$(arche_manifest_path)"; [ -f "$mf" ] || return 0
+  tmp="$(mktemp)"
+  awk -F'\t' -v p="$path" -v m="$meta" '!(($2==p) && (m=="" || $3==m))' "$mf" > "$tmp"
+  mv "$tmp" "$mf"
 }
 
 # Copy a file to a timestamped backup before it is edited; echo the backup path.
@@ -95,12 +113,14 @@ arche_backup() {
   echo "$bak"
 }
 
-# True if path is a symlink Arche created (points inside the assets root).
+# True if Arche created this path: a symlink into the assets root, or a manifest-recorded install.
 arche_is_ours() {
   local path="$1" tgt
-  [ -L "$path" ] || return 1
-  tgt="$(readlink "$path")"
-  case "$tgt" in "$ARCHE_ASSETS_ROOT"/*) return 0 ;; *) return 1 ;; esac
+  if [ -L "$path" ]; then
+    tgt="$(readlink "$path")"
+    case "$tgt" in "$ARCHE_ASSETS_ROOT"/*) return 0 ;; esac
+  fi
+  arche_manifest_has "$path"
 }
 
 # Place src at dest as a symlink (default) or copy. Returns 0 placed, 2 skipped.
@@ -221,7 +241,13 @@ arche_uninstall_asset() {
   local target="$1" type="$2" id="$3"
   "adapter_${target}_supports" "$type" || return 0
   local dest; dest="$("adapter_${target}_dest" "$type" "$id")"
-  if [ "$type" = "rules" ]; then arche_block_remove "$dest" "$id"; else rm -rf "$dest"; fi
+  if [ "$type" = "rules" ]; then
+    arche_block_remove "$dest" "$id"
+    arche_manifest_remove "$dest" "$id"
+  else
+    rm -rf "$dest"
+    arche_manifest_remove "$dest"
+  fi
 }
 
 # List the specs (type or type/id, one per line) in a profile, skipping comments and blanks.
