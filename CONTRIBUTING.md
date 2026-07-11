@@ -19,7 +19,7 @@ tags: optional space separated
 
 - `targets` is a space-separated list on one line: any of `claude`, `codex`, `generic`.
 - A skill is a folder `skills/<id>/` containing `SKILL.md` plus any supporting files.
-- Scripts declare metadata via comments (`# arche-targets:`, `# arche-description:`) and default to all targets.
+- Scripts declare metadata via comments (`# arche-targets:`, `# arche-description:`) and default to all targets. Commit scripts with the executable bit set (`chmod +x`): symlinked installs inherit the source's mode, and copied installs are made executable automatically. Arche never changes a source file's permissions.
 
 See `templates/` for a starting point per type. After adding assets, regenerate the catalog with `./install.sh docs`.
 
