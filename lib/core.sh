@@ -397,3 +397,27 @@ arche_catalog() {
     done
   done
 }
+
+arche_local_version() { cat "$ARCHE_ROOT/VERSION" 2>/dev/null || echo "0.0.0"; }
+
+# Return 0 if semver <a> is greater than <b> (tolerates a leading 'v').
+arche_version_gt() {
+  local a="${1#v}" b="${2#v}"
+  [ "$a" = "$b" ] && return 1
+  local hi; hi="$(printf '%s\n%s\n' "$a" "$b" | sort -t. -k1,1n -k2,2n -k3,3n | tail -1)"
+  [ "$hi" = "$a" ]
+}
+
+arche_check_stamp() { echo "$ARCHE_CONFIG_DIR/last-update-check"; }
+
+# Return 0 if we should check for updates: no stamp yet, or the stamp is older than 24h.
+arche_should_check() {
+  local now="$1" stamp last
+  stamp="$(arche_check_stamp)"
+  [ -f "$stamp" ] || return 0
+  last="$(cat "$stamp" 2>/dev/null || echo 0)"
+  [ "$(( now - last ))" -ge 86400 ]
+}
+
+# Latest release tag in the checkout (empty if none or not a git checkout).
+arche_latest_tag() { git -C "$ARCHE_ROOT" tag --sort=-v:refname 2>/dev/null | head -1; }
