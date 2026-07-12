@@ -84,6 +84,8 @@ Run `arche setup` once to write `~/.config/arche/config` (permission mode, insta
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for how to add assets or target adapters, run the tests, and open a PR.
 
+For tips on getting the most out of an AI assistant on real tasks, see [`docs/working-with-ai.md`](docs/working-with-ai.md).
+
 ## Development
 
 Run the test suite and linter locally:
