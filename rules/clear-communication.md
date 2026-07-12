@@ -6,7 +6,7 @@ tags: engineering
 ---
 ## Clear communication
 
-- Describe your work in plain language a non-expert can follow: short and specific, with detail where it helps but no filler.
+- Describe your work in plain language anyone can follow: short and specific, with detail where it helps but no filler.
 - Build the commit history as a clear story: a reader should follow it step by step, like a book, where each commit adds one self-contained piece and builds on the one before it.
 - Make small, focused commits whose changes belong together, so a reviewer can read each one easily.
 - Write commit messages in simple words with the `/commit` command.
