@@ -84,6 +84,8 @@ Example paragraph (the level of detail and tone to aim for):
 
 > A big tech debt win: the networking callback interfaces are now unified into a single suspend API. We had around 30 hand-rolled callback interfaces, and they've all been replaced with one shared, tested implementation that handles timeouts, throttling, and cancellation in one place. That closes the whole epic.
 
+**Read `speech-style-rules.md` in this same directory before drafting a presentation speech.** It holds fifteen rules the author arrived at by correcting a finished draft — one paragraph per slide bullet, one sentence for the release line, third person for end users, target release on every item, blockers kept out of the speech — each with the rejected and approved wording that produced it, plus the approved reference speech in full. Applying them on the first draft is what the author would otherwise ask for round by round.
+
 For a full worked example — real slide bullets, chat notes, and a weekly-report excerpt reconciled into a finished speech, with notes on why each call was made — read `weekly-speech-example.md` in this same directory. Worth reading once before the first speech of a session, especially to calibrate how much of a source's detail survives into a spoken paragraph.
 
 ---
